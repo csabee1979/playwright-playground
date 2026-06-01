@@ -4,6 +4,25 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: Browser project to run
+        type: choice
+        options:
+          - all
+          - chromium
+          - firefox
+          - webkit
+        default: chromium
+      test_filter:
+        description: Optional Playwright grep (e.g. has title)
+        required: false
+        type: string
+      deploy_report:
+        description: Deploy HTML report to GitHub Pages
+        type: boolean
+        default: true
 
 jobs:
   test:
@@ -17,9 +36,28 @@ jobs:
       - name: Install dependencies
         run: npm install -g pnpm && pnpm install
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
+        shell: bash
+        run: |
+          BROWSER="${{ github.event_name == 'workflow_dispatch' && inputs.browser || 'all' }}"
+          if [ "$BROWSER" = "all" ]; then
+            pnpm exec playwright install --with-deps
+          else
+            pnpm exec playwright install --with-deps "$BROWSER"
+          fi
       - name: Run Playwright tests
-        run: pnpm exec playwright test
+        shell: bash
+        env:
+          TEST_FILTER: ${{ github.event_name == 'workflow_dispatch' && inputs.test_filter || '' }}
+        run: |
+          BROWSER="${{ github.event_name == 'workflow_dispatch' && inputs.browser || 'all' }}"
+          ARGS=()
+          if [ "$BROWSER" != "all" ]; then
+            ARGS+=(--project="$BROWSER")
+          fi
+          if [ -n "$TEST_FILTER" ]; then
+            ARGS+=(--grep="$TEST_FILTER")
+          fi
+          pnpm exec playwright test "${ARGS[@]}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -29,7 +67,7 @@ jobs:
 
   deploy-report:
     needs: test
-    if: always()
+    if: always() && (github.event_name != 'workflow_dispatch' || inputs.deploy_report)
     runs-on: ubuntu-latest
     permissions:
       contents: write
