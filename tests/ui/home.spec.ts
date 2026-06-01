@@ -1,0 +1,29 @@
+import { test } from '@fixtures/test.fixture';
+import { UserBuilder } from '@test-data/builders/user.builder';
+
+test.describe('Playwright docs home', () => {
+  test('has title', async ({ homePage }) => {
+    await homePage.open();
+    await homePage.expectTitleContains(/Playwright/);
+  });
+
+  test('get started navigates to installation', async ({
+    homePage,
+    docsInstallationPage,
+    seedUsers,
+  }) => {
+    const admin = new UserBuilder()
+      .withEmail(seedUsers[1].email)
+      .asAdmin()
+      .build();
+
+    test.info().annotations.push({
+      type: 'seed-user',
+      description: `Prepared admin context: ${admin.displayName}`,
+    });
+
+    await homePage.open();
+    await homePage.header.clickGetStarted();
+    await docsInstallationPage.expectInstallationVisible();
+  });
+});
