@@ -1,0 +1,124 @@
+name: "Deploy Playwright Report to GitHub Pages"
+description: "Pushes Playwright HTML reports to the gh-pages branch while preserving history (based on date)"
+
+inputs:
+  report-path:
+    description: "Path to the generated Playwright HTML report"
+    required: true
+  site-root:
+    description: "Site root for reports"
+    default: "site"
+  deploy-branch:
+    description: "GitHub Pages branch"
+    default: "gh-pages"
+  retain-days:
+    description: "Number of days to retain reports"
+    default: "5"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout gh-pages branch
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.deploy-branch }}
+        path: ${{ inputs.site-root }}
+
+    - name: Copy new report into site
+      shell: bash
+      run: |
+        REPORT_PATH="${{ inputs.report-path }}"
+        SITE="${{ inputs.site-root }}"
+        RUN_ID="${{ github.run_id }}"
+        DATE=$(date +'%Y-%m-%d')
+        FOLDER_NAME="$DATE-$RUN_ID"
+        DEST="$SITE/reports/$FOLDER_NAME"
+        LATEST="$SITE/reports/latest"
+
+        mkdir -p "$DEST"
+        cp -r "$REPORT_PATH"/* "$DEST"
+
+        rm -rf "$LATEST"
+        cp -r "$DEST" "$LATEST"
+
+    - name: Prune reports older than X days
+      shell: bash
+      run: |
+        SITE="${{ inputs.site-root }}"
+        REPORTS_DIR="$SITE/reports"
+        RETAIN_DAYS="${{ inputs.retain-days }}"
+
+        CUTOFF_DATE=$(date -d "$RETAIN_DAYS days ago" +%s)
+
+        echo "Removing reports older than $RETAIN_DAYS days..."
+
+        find "$REPORTS_DIR" -mindepth 1 -maxdepth 1 -type d | while read -r dir; do
+        BASENAME=$(basename "$dir")
+
+        # Match YYYY-MM-DD-<digits>
+        if [[ "$BASENAME" =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2})-[0-9]+$ ]]; then
+          DIR_DATE="${BASH_REMATCH[1]}"
+          DIR_TIMESTAMP=$(date -d "$DIR_DATE" +%s)
+
+          if [ "$DIR_TIMESTAMP" -lt "$CUTOFF_DATE" ]; then
+            echo "Deleting $dir (older than $RETAIN_DAYS days)"
+            rm -rf "$dir"
+          fi
+        fi
+        done
+
+    - name: Commit and push to gh-pages
+      shell: bash
+      run: |
+        cd ${{ inputs.site-root }}
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git add .
+        git commit -m "Add Playwright report for run ${{ github.run_id }}" || echo "Nothing to commit"
+        git push origin ${{ inputs.deploy-branch }}
+
+    - name: Wait for GitHub Pages deployment
+      shell: bash
+      run: |
+        REPORT_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/"
+        echo "Waiting for $REPORT_URL to become available..."
+        for i in {1..30}; do
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$REPORT_URL")
+          if [ "$STATUS" -eq 200 ]; then
+            echo "Report is live!"
+            exit 0
+          fi
+          echo "Still not live (status $STATUS), retrying in 5s..."
+          sleep 5
+        done
+        echo "Warning: Report did not become live within expected time."
+        exit 0
+
+    - name: Add summary to job
+      id: add-summary-report
+      shell: bash
+      run: |
+        JSON_REPORT="${{ inputs.site-root }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/report.json"
+        PASSED=$(jq '.stats.expected - .stats.unexpected - .stats.skipped' "$JSON_REPORT")
+        FAILED=$(jq '.stats.unexpected' "$JSON_REPORT")
+        FLAKY=$(jq '.stats.flaky' "$JSON_REPORT")
+
+        HTML_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/"
+        LATEST_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/latest/"
+
+        {
+          echo "### 🧪 Test Results"
+          echo "- ✅ Passed: **$PASSED**"
+          echo "- ❌ Failed: **$FAILED**"
+          echo "- 🤷 Flaky:  **$FLAKY**"
+          echo
+          echo "### 📄 [View Full HTML Report]($HTML_URL)"
+          echo "### 🔁 [View Latest Report]($LATEST_URL)"
+        } >> $GITHUB_STEP_SUMMARY
+
+        echo "report_url=$HTML_URL" >> "$GITHUB_OUTPUT"
+
+outputs:
+  report-url:
+    description: "URL of the HTML test report"
+    value: ${{ steps.add-summary-report.outputs.report_url }}
