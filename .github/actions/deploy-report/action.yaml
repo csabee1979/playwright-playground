@@ -35,11 +35,16 @@ runs:
         DEST="$SITE/reports/$FOLDER_NAME"
         LATEST="$SITE/reports/latest"
 
+        touch "$SITE/.nojekyll"
+
         mkdir -p "$DEST"
-        cp -r "$REPORT_PATH"/* "$DEST"
+        cp -r "${REPORT_PATH}/." "$DEST/"
 
         rm -rf "$LATEST"
         cp -r "$DEST" "$LATEST"
+
+        echo "Deployed report files:"
+        find "$DEST" -type f | head -50
 
     - name: Prune reports older than X days
       shell: bash
@@ -80,41 +85,44 @@ runs:
     - name: Wait for GitHub Pages deployment
       shell: bash
       run: |
-        REPORT_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/"
-        echo "Waiting for $REPORT_URL to become available..."
-        for i in {1..30}; do
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$REPORT_URL")
+        BASE="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+        REPORT_URL="$BASE/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/index.html"
+        echo "Waiting for $REPORT_URL ..."
+        for i in $(seq 1 60); do
+          STATUS=$(curl -sL -o /dev/null -w "%{http_code}" "$REPORT_URL")
           if [ "$STATUS" -eq 200 ]; then
             echo "Report is live!"
             exit 0
           fi
-          echo "Still not live (status $STATUS), retrying in 5s..."
-          sleep 5
+          echo "Attempt $i/60: HTTP $STATUS, retrying in 10s..."
+          sleep 10
         done
-        echo "Warning: Report did not become live within expected time."
-        exit 0
+        echo "::warning::Report URL not reachable yet. Pages can take several minutes on first deploy."
 
     - name: Add summary to job
       id: add-summary-report
       shell: bash
       run: |
-        JSON_REPORT="${{ inputs.site-root }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/report.json"
-        PASSED=$(jq '.stats.expected - .stats.unexpected - .stats.skipped' "$JSON_REPORT")
-        FAILED=$(jq '.stats.unexpected' "$JSON_REPORT")
-        FLAKY=$(jq '.stats.flaky' "$JSON_REPORT")
-
         HTML_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/"
         LATEST_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/latest/"
 
         {
-          echo "### 🧪 Test Results"
-          echo "- ✅ Passed: **$PASSED**"
-          echo "- ❌ Failed: **$FAILED**"
-          echo "- 🤷 Flaky:  **$FLAKY**"
-          echo
-          echo "### 📄 [View Full HTML Report]($HTML_URL)"
-          echo "### 🔁 [View Latest Report]($LATEST_URL)"
-        } >> $GITHUB_STEP_SUMMARY
+          echo "### 📄 [View HTML report (this run)]($HTML_URL)"
+          echo "### 🔁 [View latest report]($LATEST_URL)"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        JSON_REPORT="${{ inputs.site-root }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/report.json"
+        if [ -f "$JSON_REPORT" ]; then
+          PASSED=$(jq '.stats.expected - .stats.unexpected - .stats.skipped' "$JSON_REPORT")
+          FAILED=$(jq '.stats.unexpected' "$JSON_REPORT")
+          FLAKY=$(jq '.stats.flaky' "$JSON_REPORT")
+          {
+            echo "### 🧪 Test Results"
+            echo "- ✅ Passed: **$PASSED**"
+            echo "- ❌ Failed: **$FAILED**"
+            echo "- 🤷 Flaky:  **$FLAKY**"
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
 
         echo "report_url=$HTML_URL" >> "$GITHUB_OUTPUT"
 
