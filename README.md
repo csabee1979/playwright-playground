@@ -1,35 +1,53 @@
-# playwright-playground
+# Playwright Playground
 
-TypeScript Playwright project with page objects, components, API clients, test data, and environment config.
+Practical Playwright + TypeScript project for contributors.
+This repository includes:
+- UI tests with page objects and reusable components
+- API tests with typed API clients
+- Shared fixtures and test data
+- Environment-based configuration
 
-## Project structure
+## Quick start
 
+### 1) Prerequisites
+
+- Node.js 20+ (LTS recommended)
+- `pnpm` installed globally
+
+Install `pnpm` if needed:
+
+```bash
+npm install -g pnpm
 ```
-config/                 # Environment-specific URLs and timeouts
-src/
-  pages/                # Page objects (one per screen/route)
-  components/           # Reusable UI fragments
-  api/                  # API clients (Playwright APIRequestContext)
-  fixtures/             # Custom test fixtures
-  test-data/            # JSON fixtures, types, builders
-  utils/                # Shared helpers
-tests/
-  ui/                   # UI specs
-  api/                  # API specs
-```
 
-## Running tests
+### 2) Install dependencies and browsers
 
 ```bash
 pnpm install
 pnpm exec playwright install
-pnpm typecheck
+```
+
+### 3) Run tests
+
+```bash
 pnpm test
 ```
 
-### Environment
+Additional run options:
 
-Set `TEST_ENV` to `local`, `staging`, or `production` (default: `local`). Copy `.env.example` to `.env` to override URLs:
+```bash
+pnpm run test:ui       # Playwright interactive mode
+pnpm run test:headed   # Run tests with browser visible
+pnpm exec playwright test tests/ui
+pnpm exec playwright test tests/api
+```
+
+## Environment setup
+
+Set `TEST_ENV` to `local`, `staging`, or `production` (default: `local`).
+
+1. Copy `.env.example` to `.env`
+2. Override values as needed:
 
 ```bash
 TEST_ENV=staging
@@ -37,19 +55,69 @@ BASE_URL=https://your-app.example.com
 API_BASE_URL=https://api.your-app.example.com
 ```
 
-If API tests fail with certificate errors behind a corporate proxy, set `IGNORE_HTTPS_ERRORS=true` locally (CI typically does not need this).
+Notes:
+- `local` defaults to `https://playwright.dev`
+- `staging` and `production` require both `BASE_URL` and `API_BASE_URL`
+- If your corporate proxy causes certificate issues, use `IGNORE_HTTPS_ERRORS=true` locally
 
-`local` defaults to `https://playwright.dev`. `staging` and `production` require both `BASE_URL` and `API_BASE_URL`.
+## Conventions
 
-### Targeted runs
+Use these conventions to keep tests consistent and maintainable across teams.
 
-```bash
-pnpm exec playwright test tests/ui
-pnpm exec playwright test tests/api
-pnpm exec playwright test --project=chromium
+### Folder and naming conventions
+
+| Layer | Pattern | Purpose |
+|---|---|---|
+| Page object | `src/pages/*.page.ts` | Screen-level actions and checks (`open()`, assertions, workflows) |
+| Component | `src/components/*.component.ts` | Reusable UI parts (header, modal, form) |
+| API client | `src/api/**/*.client.ts` | Encapsulates API calls using `APIRequestContext` |
+| Fixtures | `src/fixtures/*.fixture.ts` | Shared setup objects (pages, clients, test data) |
+| Tests | `tests/**/*.spec.ts` | Test scenarios only (keep thin and readable) |
+
+### Test authoring guidelines
+
+- Always import `test` (and `expect` when needed) from `@fixtures/test.fixture`
+- Keep assertions in specs, and page/API interaction logic in page objects or clients
+- Use clear test names in business language (what behavior is validated)
+- Prefer `test.step()` for multi-step scenarios
+- Keep tests independent; do not rely on order
+
+### Example: UI test style
+
+```ts
+import { test } from '@fixtures/test.fixture';
+
+test('get started navigates to installation', async ({
+  homePage,
+  docsInstallationPage,
+}) => {
+  await homePage.open();
+  await homePage.header.clickGetStarted();
+  await docsInstallationPage.expectInstallationVisible();
+});
 ```
 
-### Allure reports and trends
+### Example: API test style
+
+```ts
+import { expect, test } from '@fixtures/test.fixture';
+
+test('health check returns success', async ({ exampleApi }) => {
+  const response = await exampleApi.healthCheck();
+  expect(response.ok()).toBeTruthy();
+});
+```
+
+## Recommended daily commands
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm run check
+```
+
+## Reports (Allure)
 
 ```bash
 pnpm run allure:clean
@@ -57,15 +125,11 @@ pnpm test
 pnpm run allure:trend
 ```
 
-`allure:trend` copies the previous report history into fresh results before generating the new report so trend charts are preserved across runs.
+`allure:trend` keeps history so trend charts stay visible across runs.
 
-## Conventions
+## Common issues
 
-| Layer | File pattern | Role |
-|-------|----------------|------|
-| Page object | `*.page.ts` | Screen-level actions; each page defines `path` + `open()` |
-| Component | `*.component.ts` | Shared widgets (header, modal, form) |
-| API client | `*.client.ts` | Domain API calls via `APIRequestContext` |
-| Spec | `*.spec.ts` | Thin tests using fixtures |
-
-Import the extended `test` / `expect` from `src/fixtures/test.fixture.ts` in all specs.
+- **`pnpm: command not found`**: install pnpm globally (`npm i -g pnpm`)
+- **Browser executable missing**: run `pnpm exec playwright install`
+- **Environment URL errors**: check `.env` values for `BASE_URL` and `API_BASE_URL`
+- **SSL/proxy failures in API tests**: try `IGNORE_HTTPS_ERRORS=true` locally
