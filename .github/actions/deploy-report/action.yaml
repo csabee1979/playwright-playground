@@ -5,6 +5,9 @@ inputs:
   report-path:
     description: "Path to the generated Playwright HTML report"
     required: true
+  report-subdir:
+    description: "Subdirectory under site root where reports are stored"
+    default: "reports"
   site-root:
     description: "Site root for reports"
     default: "site"
@@ -28,12 +31,13 @@ runs:
       shell: bash
       run: |
         REPORT_PATH="${{ inputs.report-path }}"
+        REPORT_SUBDIR="${{ inputs.report-subdir }}"
         SITE="${{ inputs.site-root }}"
         RUN_ID="${{ github.run_id }}"
         DATE=$(date +'%Y-%m-%d')
         FOLDER_NAME="$DATE-$RUN_ID"
-        DEST="$SITE/reports/$FOLDER_NAME"
-        LATEST="$SITE/reports/latest"
+        DEST="$SITE/$REPORT_SUBDIR/$FOLDER_NAME"
+        LATEST="$SITE/$REPORT_SUBDIR/latest"
 
         touch "$SITE/.nojekyll"
 
@@ -50,7 +54,8 @@ runs:
       shell: bash
       run: |
         SITE="${{ inputs.site-root }}"
-        REPORTS_DIR="$SITE/reports"
+        REPORT_SUBDIR="${{ inputs.report-subdir }}"
+        REPORTS_DIR="$SITE/$REPORT_SUBDIR"
         RETAIN_DAYS="${{ inputs.retain-days }}"
 
         CUTOFF_DATE=$(date -d "$RETAIN_DAYS days ago" +%s)
@@ -86,7 +91,8 @@ runs:
       shell: bash
       run: |
         BASE="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
-        REPORT_URL="$BASE/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/index.html"
+        REPORT_SUBDIR="${{ inputs.report-subdir }}"
+        REPORT_URL="$BASE/$REPORT_SUBDIR/$(date +'%Y-%m-%d')-${{ github.run_id }}/index.html"
         echo "Waiting for $REPORT_URL ..."
         for i in $(seq 1 60); do
           STATUS=$(curl -sL -o /dev/null -w "%{http_code}" "$REPORT_URL")
@@ -103,15 +109,16 @@ runs:
       id: add-summary-report
       shell: bash
       run: |
-        HTML_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/"
-        LATEST_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/reports/latest/"
+        REPORT_SUBDIR="${{ inputs.report-subdir }}"
+        HTML_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/$REPORT_SUBDIR/$(date +'%Y-%m-%d')-${{ github.run_id }}/"
+        LATEST_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/$REPORT_SUBDIR/latest/"
 
         {
-          echo "### 📄 [View HTML report (this run)]($HTML_URL)"
+          echo "### 📄 [View report (this run)]($HTML_URL)"
           echo "### 🔁 [View latest report]($LATEST_URL)"
         } >> "$GITHUB_STEP_SUMMARY"
 
-        JSON_REPORT="${{ inputs.site-root }}/reports/$(date +'%Y-%m-%d')-${{ github.run_id }}/report.json"
+        JSON_REPORT="${{ inputs.site-root }}/$REPORT_SUBDIR/$(date +'%Y-%m-%d')-${{ github.run_id }}/report.json"
         if [ -f "$JSON_REPORT" ]; then
           PASSED=$(jq '.stats.expected - .stats.unexpected - .stats.skipped' "$JSON_REPORT")
           FAILED=$(jq '.stats.unexpected' "$JSON_REPORT")

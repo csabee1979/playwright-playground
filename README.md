@@ -49,6 +49,16 @@ pnpm exec playwright test tests/api
 pnpm exec playwright test --project=chromium
 ```
 
+### Allure reports and trends
+
+```bash
+pnpm run allure:clean
+pnpm test
+pnpm run allure:trend
+```
+
+`allure:trend` copies the previous report history into fresh results before generating the new report so trend charts are preserved across runs.
+
 ## Conventions
 
 | Layer | File pattern | Role |
