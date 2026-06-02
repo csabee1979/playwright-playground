@@ -8,7 +8,9 @@
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm typecheck && pnpm test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
     "report": "playwright show-report",
     "allure:clean": "node -e \"const fs=require('fs'); ['allure-results','allure-report'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\"",
     "allure:generate": "allure generate allure-results --clean -o allure-report",
@@ -21,11 +23,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",
     "allure-commandline": "^2.42.0",
     "allure-playwright": "^3.9.0",
     "dotenv": "^17.4.2",
-    "typescript": "^6.0.3"
+    "eslint": "^10.4.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.0"
   }
 }
