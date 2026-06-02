@@ -1,5 +1,6 @@
 import { test } from '@fixtures/test.fixture';
 import { UserBuilder } from '@test-data/builders/user.builder';
+import { log } from '@utils/logger';
 
 test.describe('Playwright docs home', () => {
   test('has title', async ({ homePage }) => {
@@ -12,14 +13,16 @@ test.describe('Playwright docs home', () => {
     docsInstallationPage,
     seedUsers,
   }) => {
-    const admin = new UserBuilder()
-      .withEmail(seedUsers[1].email)
-      .asAdmin()
-      .build();
+    await test.step('Prepare admin context', async () => {
+      const admin = new UserBuilder()
+        .withEmail(seedUsers[1].email)
+        .asAdmin()
+        .build();
 
-    test.info().annotations.push({
-      type: 'seed-user',
-      description: `Prepared admin context: ${admin.displayName}`,
+      log('Prepared admin context', {
+        role: admin.role,
+        displayName: admin.displayName,
+      });
     });
 
     await homePage.open();
