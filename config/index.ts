@@ -1,3 +1,4 @@
+import { getDevConfig } from './environments/dev';
 import { localConfig } from './environments/local';
 import { getProductionConfig } from './environments/production';
 import { getStagingConfig } from './environments/staging';
@@ -5,6 +6,7 @@ import type { EnvironmentName, TestConfig } from './types';
 
 const configFactories: Record<EnvironmentName, () => TestConfig> = {
   local: () => localConfig,
+  dev: getDevConfig,
   staging: getStagingConfig,
   production: getProductionConfig,
 };

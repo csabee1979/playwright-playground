@@ -1,4 +1,4 @@
-export type EnvironmentName = 'local' | 'staging' | 'production';
+export type EnvironmentName = 'local' | 'dev' | 'staging' | 'production';
 
 export interface TestConfig {
   name: EnvironmentName;
