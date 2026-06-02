@@ -3,8 +3,8 @@ import type { TestConfig } from '@config/index';
 import { BaseApiClient } from '../base-api.client';
 
 export class ExampleApiClient extends BaseApiClient {
-  constructor(request: APIRequestContext, config: TestConfig) {
-    super(request, config);
+  constructor(request: APIRequestContext, testConfig: TestConfig) {
+    super(request, testConfig);
   }
 
   /** GET / — smoke check that the configured API base is reachable. */

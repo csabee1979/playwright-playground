@@ -6,6 +6,7 @@ export function getProductionConfig(): TestConfig {
     name: 'production',
     baseURL: getRequiredEnv('BASE_URL'),
     apiBaseURL: getRequiredEnv('API_BASE_URL'),
+    jsonPlaceholderBaseURL: getRequiredEnv('JSON_PLACEHOLDER_BASE_URL'),
     defaultTimeout: 30_000,
   };
 }

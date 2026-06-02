@@ -1,16 +1,24 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
 import type { TestConfig } from '@config/index';
 
+export type BaseApiClientConfig = {
+  baseURL?: string;
+};
+
 export abstract class BaseApiClient {
+  private readonly baseURL: string;
+
   constructor(
     protected readonly request: APIRequestContext,
-    protected readonly config: TestConfig,
-  ) {}
+    protected readonly testConfig: TestConfig,
+    clientConfig: BaseApiClientConfig = {},
+  ) {
+    this.baseURL = (clientConfig.baseURL ?? this.testConfig.apiBaseURL).replace(/\/$/, '',);
+  }
 
   protected url(path: string): string {
-    const base = this.config.apiBaseURL.replace(/\/$/, '');
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${normalizedPath}`;
+    return `${this.baseURL}${normalizedPath}`;
   }
 
   protected async get(path: string): Promise<APIResponse> {

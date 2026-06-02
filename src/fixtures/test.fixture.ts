@@ -1,6 +1,7 @@
 import { request as apiRequest, test as base } from '@playwright/test';
 import { getConfig } from '@config/index';
 import { ExampleApiClient } from '@api/clients/example-api.client';
+import { JsonPlaceholderApiClient } from '@api/clients/json-placeholder.client';
 import { DocsInstallationPage } from '@pages/docs-installation.page';
 import { HomePage } from '@pages/home.page';
 import type { TestConfig } from '@config/index';
@@ -12,6 +13,7 @@ type TestFixtures = {
   homePage: HomePage;
   docsInstallationPage: DocsInstallationPage;
   exampleApi: ExampleApiClient;
+  jsonPlaceholderApi: JsonPlaceholderApiClient;
   seedUsers: User[];
 };
 
@@ -60,6 +62,21 @@ export const test = base.extend<TestFixtures>({
     });
 
     await use(new ExampleApiClient(request, testConfig));
+    await request.dispose();
+  },
+
+  jsonPlaceholderApi: async ({ testConfig }, use) => {
+    const request = await apiRequest.newContext({
+      ignoreHTTPSErrors: testConfig.ignoreHTTPSErrors,
+    });
+
+    await use(
+      new JsonPlaceholderApiClient(
+        request,
+        testConfig,
+        testConfig.jsonPlaceholderBaseURL,
+      ),
+    );
     await request.dispose();
   },
 
