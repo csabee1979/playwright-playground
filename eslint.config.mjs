@@ -28,6 +28,8 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-floating-promises': 'error',
+      'require-await': 'off',
+      '@typescript-eslint/require-await': 'error',
     },
   },
   {

@@ -107,32 +107,232 @@ test('health check returns success', async ({ exampleApi }) => {
 });
 ```
 
-## Git hooks and code quality
+## Developer tooling
 
-This project uses [Husky](https://typicode.github.io/husky/) to run checks before each commit:
+This project enforces code quality locally through Git hooks (Husky), ESLint, and Prettier.
+Playwright tests run in GitHub Actions on every push and pull request.
 
-1. `pnpm typecheck` — full-project TypeScript check (`tsc --noEmit`)
-2. `pnpm lint-staged` — auto-fixes staged files (`prettier --write`, then `eslint --fix`)
+### Husky (Git hooks)
 
-Hooks are installed automatically when you run `pnpm install` (via the `prepare` script).
+[Husky](https://typicode.github.io/husky/) runs scripts automatically at Git lifecycle events.
+This repo uses a **pre-commit** hook so checks run before each commit is created.
 
-Manual quality commands:
+#### Installation
+
+Husky is installed as a dev dependency and wired through the `prepare` script in `package.json`:
+
+```json
+"scripts": {
+  "prepare": "husky"
+}
+```
+
+When you run `pnpm install`, `prepare` runs and registers the hooks from the `.husky/` folder.
+No extra setup is needed after a fresh clone.
+
+#### Pre-commit hook
+
+File: `.husky/pre-commit`
 
 ```bash
 pnpm typecheck
-pnpm lint
-pnpm format        # write formatting fixes
-pnpm format:check  # verify formatting without writing
-pnpm run check     # typecheck + lint + format:check + test
+pnpm lint-staged
 ```
+
+| Step | Command            | Scope             | What it does                                    |
+| ---- | ------------------ | ----------------- | ----------------------------------------------- |
+| 1    | `pnpm typecheck`   | Whole project     | Runs `tsc --noEmit` to catch TypeScript errors  |
+| 2    | `pnpm lint-staged` | Staged files only | Auto-formats and lints files you are committing |
+
+If either step fails, the commit is blocked. Fix the reported issues and try again.
+
+To skip hooks in exceptional cases (not recommended):
+
+```bash
+git commit --no-verify -m "your message"
+```
+
+#### lint-staged configuration
+
+`lint-staged` runs commands only on **staged** files, keeping commits fast.
+Configuration lives in `package.json`:
+
+```json
+"lint-staged": {
+  "*.{ts,js,mjs}": [
+    "prettier --write",
+    "eslint --fix"
+  ],
+  "*.{json,md,yml,yaml}": [
+    "prettier --write"
+  ]
+}
+```
+
+| File pattern           | Tools run (in order)            |
+| ---------------------- | ------------------------------- |
+| `*.{ts,js,mjs}`        | Prettier write, then ESLint fix |
+| `*.{json,md,yml,yaml}` | Prettier write only             |
+
+Prettier runs before ESLint so formatting is settled before lint rules are evaluated.
+
+> **Note:** `lint-staged@15` is used for compatibility with Git 2.29+. If you upgrade Git to 2.32+,
+> you can move to `lint-staged@17` in `package.json`.
+
+### ESLint (linter)
+
+[ESLint](https://eslint.org/) catches code-quality and correctness issues.
+This project uses the **flat config** format in `eslint.config.mjs`.
+
+#### Stack
+
+| Package                  | Role                                              |
+| ------------------------ | ------------------------------------------------- |
+| `eslint`                 | Core linter                                       |
+| `@eslint/js`             | Base JavaScript recommended rules                 |
+| `typescript-eslint`      | TypeScript parser and rules                       |
+| `eslint-config-prettier` | Disables ESLint rules that conflict with Prettier |
+
+#### Key configuration
+
+```text
+eslint.config.mjs
+├── ignores          → node_modules, reports, test output
+├── recommended      → @eslint/js + typescript-eslint base rules
+├── typed rules      → TypeScript-only, type-aware checks (*.ts)
+├── fixture override → allows empty destructuring in Playwright fixtures
+└── prettier         → turns off stylistic rules handled by Prettier
+```
+
+Notable rules:
+
+- `@typescript-eslint/no-floating-promises` — errors on unhandled promises (important in async tests)
+- `no-empty-pattern: off` — allowed in `*.fixture.ts` files because Playwright fixtures may use `async ({}, use)`
+
+#### Commands
+
+```bash
+pnpm lint           # check all files
+pnpm lint:fix       # auto-fix where possible
+```
+
+ESLint checks the whole project. On commit, `lint-staged` runs `eslint --fix` only on staged
+TypeScript/JavaScript files.
+
+### Prettier (formatter)
+
+[Prettier](https://prettier.io/) enforces consistent code style (quotes, spacing, line breaks).
+It handles formatting; ESLint handles logic and best practices.
+
+#### Configuration
+
+File: `.prettierrc`
+
+| Option          | Value   | Effect                                          |
+| --------------- | ------- | ----------------------------------------------- |
+| `singleQuote`   | `true`  | Use `'single'` quotes                           |
+| `trailingComma` | `"all"` | Trailing commas in multi-line structures        |
+| `printWidth`    | `100`   | Wrap lines longer than 100 characters           |
+| `semi`          | `true`  | Always use semicolons                           |
+| `tabWidth`      | `2`     | 2-space indentation                             |
+| `endOfLine`     | `"lf"`  | Unix line endings (pairs with `.gitattributes`) |
+
+#### Ignored paths
+
+File: `.prettierignore` — excludes generated output and dependencies:
+
+- `node_modules/`, `test-results/`, `playwright-report/`, `allure-report/`, `allure-results/`
+- `pnpm-lock.yaml` (lockfiles should not be reformatted)
+
+#### Commands
+
+```bash
+pnpm format         # write formatting fixes to all files
+pnpm format:check   # verify formatting without writing (used in pnpm check)
+```
+
+On commit, `lint-staged` runs `prettier --write` on staged files automatically.
 
 ### Line endings
 
-A `.gitattributes` file enforces LF line endings in the repository (`* text=auto eol=lf`).
-If you see line-ending warnings on Windows, run:
+File: `.gitattributes`
+
+```gitattributes
+* text=auto eol=lf
+```
+
+All text files are stored with **LF** line endings in the repository, regardless of the contributor's OS.
+Binary files (images, fonts, PDFs) are explicitly marked so Git never alters them.
+
+If you see line-ending warnings on Windows after cloning:
 
 ```bash
 git add --renormalize .
+```
+
+Optionally set locally:
+
+```bash
+git config core.autocrlf false
+```
+
+### GitHub Actions
+
+File: `.github/workflows/playwright.yml`
+
+The workflow runs Playwright tests in CI and publishes HTML reports to GitHub Pages.
+
+#### Triggers
+
+| Event               | When it runs                     |
+| ------------------- | -------------------------------- |
+| `push`              | Commits to `main` or `master`    |
+| `pull_request`      | PRs targeting `main` or `master` |
+| `workflow_dispatch` | Manual run from the Actions tab  |
+
+#### Job: `test`
+
+Runs on `ubuntu-latest` with a 60-minute timeout.
+
+1. **Checkout** repository
+2. **Setup Node.js** (LTS)
+3. **Install dependencies** — `pnpm install`
+4. **Install Playwright browsers** — all browsers by default, or a single browser on manual runs
+5. **Run Playwright tests** — `pnpm exec playwright test`
+6. **Restore Allure history** from the `gh-pages` branch (for trend charts)
+7. **Generate Allure report**
+8. **Upload artifacts** — Playwright HTML report and Allure report (retained 30 days)
+
+#### Job: `deploy-report`
+
+Runs after `test` (even if tests fail) and publishes reports to the `gh-pages` branch.
+
+- Copies Playwright and Allure reports into dated folders (`YYYY-MM-DD-<run_id>`)
+- Updates `reports/latest/` and `allure/latest/` symlinks (copies)
+- Prunes reports older than 5 days
+- Adds links to the GitHub Actions job summary
+
+#### Manual run options (`workflow_dispatch`)
+
+| Input           | Options                                | Default    |
+| --------------- | -------------------------------------- | ---------- |
+| `browser`       | `all`, `chromium`, `firefox`, `webkit` | `chromium` |
+| `test_filter`   | Optional Playwright `--grep` pattern   | (empty)    |
+| `deploy_report` | Publish to GitHub Pages                | `true`     |
+
+#### Local vs CI checks
+
+| Check                       | Pre-commit (Husky) | GitHub Actions |
+| --------------------------- | ------------------ | -------------- |
+| TypeScript (`tsc --noEmit`) | Yes                | No             |
+| ESLint                      | Yes (staged files) | No             |
+| Prettier                    | Yes (staged files) | No             |
+| Playwright tests            | No                 | Yes            |
+
+Run the full local validation suite before pushing:
+
+```bash
+pnpm run check   # typecheck + lint + format:check + test
 ```
 
 ## Recommended daily commands
