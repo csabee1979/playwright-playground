@@ -2,6 +2,7 @@
 
 Practical Playwright + TypeScript project for contributors.
 This repository includes:
+
 - UI tests with page objects and reusable components
 - API tests with typed API clients
 - Shared fixtures and test data
@@ -56,6 +57,7 @@ API_BASE_URL=https://api.your-app.example.com
 ```
 
 Notes:
+
 - `local` defaults to `https://playwright.dev`
 - `staging` and `production` require both `BASE_URL` and `API_BASE_URL`
 - If your corporate proxy causes certificate issues, use `IGNORE_HTTPS_ERRORS=true` locally
@@ -66,13 +68,13 @@ Use these conventions to keep tests consistent and maintainable across teams.
 
 ### Folder and naming conventions
 
-| Layer | Pattern | Purpose |
-|---|---|---|
-| Page object | `src/pages/*.page.ts` | Screen-level actions and checks (`open()`, assertions, workflows) |
-| Component | `src/components/*.component.ts` | Reusable UI parts (header, modal, form) |
-| API client | `src/api/**/*.client.ts` | Encapsulates API calls using `APIRequestContext` |
-| Fixtures | `src/fixtures/*.fixture.ts` | Shared setup objects (pages, clients, test data) |
-| Tests | `tests/**/*.spec.ts` | Test scenarios only (keep thin and readable) |
+| Layer       | Pattern                         | Purpose                                                           |
+| ----------- | ------------------------------- | ----------------------------------------------------------------- |
+| Page object | `src/pages/*.page.ts`           | Screen-level actions and checks (`open()`, assertions, workflows) |
+| Component   | `src/components/*.component.ts` | Reusable UI parts (header, modal, form)                           |
+| API client  | `src/api/**/*.client.ts`        | Encapsulates API calls using `APIRequestContext`                  |
+| Fixtures    | `src/fixtures/*.fixture.ts`     | Shared setup objects (pages, clients, test data)                  |
+| Tests       | `tests/**/*.spec.ts`            | Test scenarios only (keep thin and readable)                      |
 
 ### Test authoring guidelines
 
@@ -87,10 +89,7 @@ Use these conventions to keep tests consistent and maintainable across teams.
 ```ts
 import { test } from '@fixtures/test.fixture';
 
-test('get started navigates to installation', async ({
-  homePage,
-  docsInstallationPage,
-}) => {
+test('get started navigates to installation', async ({ homePage, docsInstallationPage }) => {
   await homePage.open();
   await homePage.header.clickGetStarted();
   await docsInstallationPage.expectInstallationVisible();
@@ -108,11 +107,40 @@ test('health check returns success', async ({ exampleApi }) => {
 });
 ```
 
+## Git hooks and code quality
+
+This project uses [Husky](https://typicode.github.io/husky/) to run checks before each commit:
+
+1. `pnpm typecheck` — full-project TypeScript check (`tsc --noEmit`)
+2. `pnpm lint-staged` — auto-fixes staged files (`prettier --write`, then `eslint --fix`)
+
+Hooks are installed automatically when you run `pnpm install` (via the `prepare` script).
+
+Manual quality commands:
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm format        # write formatting fixes
+pnpm format:check  # verify formatting without writing
+pnpm run check     # typecheck + lint + format:check + test
+```
+
+### Line endings
+
+A `.gitattributes` file enforces LF line endings in the repository (`* text=auto eol=lf`).
+If you see line-ending warnings on Windows, run:
+
+```bash
+git add --renormalize .
+```
+
 ## Recommended daily commands
 
 ```bash
 pnpm typecheck
 pnpm lint
+pnpm format:check
 pnpm test
 pnpm run check
 ```

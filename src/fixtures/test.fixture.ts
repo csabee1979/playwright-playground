@@ -70,13 +70,7 @@ export const test = base.extend<TestFixtures>({
       ignoreHTTPSErrors: testConfig.ignoreHTTPSErrors,
     });
 
-    await use(
-      new JsonPlaceholderApiClient(
-        request,
-        testConfig,
-        testConfig.jsonPlaceholderBaseURL,
-      ),
-    );
+    await use(new JsonPlaceholderApiClient(request, testConfig, testConfig.jsonPlaceholderBaseURL));
     await request.dispose();
   },
 
