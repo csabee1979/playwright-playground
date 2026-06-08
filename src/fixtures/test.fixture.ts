@@ -2,11 +2,11 @@ import { request as apiRequest, test as base } from '@playwright/test';
 import { getConfig } from '@config/index';
 import { ExampleApiClient } from '@api/clients/example-api.client';
 import { JsonPlaceholderApiClient } from '@api/clients/json-placeholder.client';
-import { DocsInstallationPage } from '@pages/docs-installation.page';
-import { HomePage } from '@pages/home.page';
 import type { TestConfig } from '@config/index';
 import users from '@test-data/users.json';
 import type { User } from '@test-data/types/user.types';
+import { HomePage } from '@pages/home-page';
+import { DocsInstallationPage } from '@pages/docs-installation.page';
 
 type TestFixtures = {
   testConfig: TestConfig;

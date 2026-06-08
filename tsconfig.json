@@ -7,16 +7,37 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "paths": {
-      "@config/*": ["./config/*"],
-      "@pages/*": ["./src/pages/*"],
-      "@components/*": ["./src/components/*"],
-      "@api/*": ["./src/api/*"],
-      "@fixtures/*": ["./src/fixtures/*"],
-      "@test-data/*": ["./src/test-data/*"],
-      "@utils/*": ["./src/utils/*"]
+      "@config/*": [
+        "./config/*"
+      ],
+      "@pages/*": [
+        "./src/pages/*"
+      ],
+      "@components/*": [
+        "./src/components/*"
+      ],
+      "@api/*": [
+        "./src/api/*"
+      ],
+      "@fixtures/*": [
+        "./src/fixtures/*"
+      ],
+      "@test-data/*": [
+        "./src/test-data/*"
+      ],
+      "@utils/*": [
+        "./src/utils/*"
+      ]
     }
   },
-  "include": ["config/**/*.ts", "src/**/*.ts", "tests/**/*.ts", "playwright.config.ts"]
+  "include": [
+    "config/**/*.ts",
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "playwright.config.ts"
+  ]
 }

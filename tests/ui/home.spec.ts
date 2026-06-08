@@ -8,6 +8,11 @@ test.describe('Playwright docs home', () => {
     await homePage.expectTitleContains(/Playwright/);
   });
 
+  test('Card has h3', async ({ homePage }) => {
+    await homePage.open();
+    await homePage.pathCards.expectPathCardH3Visible();
+  });
+
   test('get started navigates to installation', async ({
     homePage,
     docsInstallationPage,
