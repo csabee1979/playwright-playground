@@ -1,4 +1,0 @@
-"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","644","get started navigates to installation","chromium","2026-06-02","passed","2026-06-02","Playwright docs home","ui/home.spec.ts","",""
-"","568","has title","chromium","2026-06-02","passed","2026-06-02","Playwright docs home","ui/home.spec.ts","",""
-"","71","health check returns success","chromium","2026-06-02","passed","2026-06-02","API smoke","api/health.spec.ts","",""
