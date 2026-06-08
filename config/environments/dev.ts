@@ -10,4 +10,3 @@ export function getDevConfig(): TestConfig {
     defaultTimeout: 30_000,
   };
 }
-

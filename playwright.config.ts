@@ -11,10 +11,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   timeout: testConfig.defaultTimeout,
-  reporter: [
-    ['html'],
-    ['allure-playwright', { outputFolder: 'allure-results' }],
-  ],
+  reporter: [['html'], ['allure-playwright', { outputFolder: 'allure-results' }]],
   use: {
     baseURL: testConfig.baseURL,
     trace: 'on-first-retry',

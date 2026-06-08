@@ -13,7 +13,7 @@ export abstract class BaseApiClient {
     protected readonly testConfig: TestConfig,
     clientConfig: BaseApiClientConfig = {},
   ) {
-    this.baseURL = (clientConfig.baseURL ?? this.testConfig.apiBaseURL).replace(/\/$/, '',);
+    this.baseURL = (clientConfig.baseURL ?? this.testConfig.apiBaseURL).replace(/\/$/, '');
   }
 
   protected url(path: string): string {

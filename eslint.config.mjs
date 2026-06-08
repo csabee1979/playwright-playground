@@ -1,4 +1,5 @@
 import eslint from '@eslint/js';
+import eslintConfigPrettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -27,6 +28,8 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-floating-promises': 'error',
+      'require-await': 'off',
+      '@typescript-eslint/require-await': 'error',
     },
   },
   {
@@ -36,4 +39,5 @@ export default tseslint.config(
       'no-empty-pattern': 'off',
     },
   },
+  eslintConfigPrettier,
 );

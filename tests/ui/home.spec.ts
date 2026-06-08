@@ -19,10 +19,7 @@ test.describe('Playwright docs home', () => {
     seedUsers,
   }) => {
     await test.step('Prepare admin context', async () => {
-      const admin = new UserBuilder()
-        .withEmail(seedUsers[1].email)
-        .asAdmin()
-        .build();
+      const admin = new UserBuilder().withEmail(seedUsers[1].email).asAdmin().build();
 
       log('Prepared admin context', {
         role: admin.role,
