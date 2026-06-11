@@ -1,9 +1,10 @@
-import { request as apiRequest, test as base } from '@playwright/test';
+import { mergeTests, request as apiRequest, test as base } from '@playwright/test';
 import { getConfig } from '@config/index';
 import { ExampleApiClient } from '@api/clients/example-api.client';
 import { JsonPlaceholderApiClient } from '@api/clients/json-placeholder.client';
 import type { TestConfig } from '@config/index';
-import users from '@test-data/users.json';
+import { test as authTest } from './auth.fixture';
+import { userRepository } from '@test-data/repositories/user.repository';
 import type { User } from '@test-data/types/user.types';
 import { HomePage } from '@pages/home-page';
 import { DocsInstallationPage } from '@pages/docs-installation.page';
@@ -17,33 +18,9 @@ type TestFixtures = {
   seedUsers: User[];
 };
 
-const userRoles: readonly User['role'][] = ['admin', 'user', 'guest'];
+const seedUsers = userRepository.getAll();
 
-function isUser(value: unknown): value is User {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.id === 'string' &&
-    typeof candidate.email === 'string' &&
-    typeof candidate.displayName === 'string' &&
-    typeof candidate.role === 'string' &&
-    userRoles.includes(candidate.role as User['role'])
-  );
-}
-
-function parseUsers(value: unknown): User[] {
-  if (!Array.isArray(value) || !value.every(isUser)) {
-    throw new Error('Invalid user test data. Expected an array of User objects.');
-  }
-  return value;
-}
-
-const seedUsers = parseUsers(users);
-
-export const test = base.extend<TestFixtures>({
+const appTest = base.extend<TestFixtures>({
   testConfig: async ({}, use) => {
     await use(getConfig());
   },
@@ -78,5 +55,7 @@ export const test = base.extend<TestFixtures>({
     await use(seedUsers);
   },
 });
+
+export const test = mergeTests(appTest, authTest);
 
 export { expect } from '@playwright/test';

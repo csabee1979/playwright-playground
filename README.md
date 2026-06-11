@@ -54,6 +54,7 @@ Set `TEST_ENV` to `local`, `staging`, or `production` (default: `local`).
 TEST_ENV=staging
 BASE_URL=https://your-app.example.com
 API_BASE_URL=https://api.your-app.example.com
+RESTFUL_API_URL=https://api.restful-api.dev
 ```
 
 Notes:
@@ -61,6 +62,55 @@ Notes:
 - `local` defaults to `https://playwright.dev`
 - `staging` and `production` require both `BASE_URL` and `API_BASE_URL`
 - If your corporate proxy causes certificate issues, use `IGNORE_HTTPS_ERRORS=true` locally
+
+### Authenticated restful-api.dev tests
+
+This repo includes an authenticated API fixture for [restful-api.dev](https://restful-api.dev/).
+
+- Authentication is done once per Playwright worker via `POST /login`
+- JWT auth state is cached in `playwright/.auth/worker-<index>.json` and reused across tests
+- Cached auth files are gitignored and recreated automatically when expired
+
+Set these env vars to enable authenticated tests:
+
+```bash
+RESTFUL_API_URL=https://api.restful-api.dev
+RESTFUL_API_KEY=your_api_key
+
+# Regular user
+RESTFUL_API_USER_ID=user-001
+RESTFUL_API_USER_NAME=your_user_name
+RESTFUL_API_USER_EMAIL=your_user@example.com
+RESTFUL_API_USER_PASSWORD=your_user_password
+
+# Admin user
+RESTFUL_API_ADMIN_ID=admin-001
+RESTFUL_API_ADMIN_NAME=your_admin_name
+RESTFUL_API_ADMIN_EMAIL=your_admin@example.com
+RESTFUL_API_ADMIN_PASSWORD=your_admin_password
+```
+
+If credentials are missing, authenticated tests are skipped and the rest of the suite still runs.
+
+Two independent repositories handle different concerns:
+
+- `UserRepository` — test data entities loaded from `src/test-data/users.json` (id, name, displayName, role)
+- `LoginUserRepository` — auth credentials loaded purely from env, independent of `users.json`
+
+Available fixtures per role:
+
+| Fixture             | Worker fixture         | Auth file                   |
+| ------------------- | ---------------------- | --------------------------- |
+| `restfulApiAsUser`  | `workerUserAuthState`  | `user-001-worker-{n}.json`  |
+| `restfulApiAsAdmin` | `workerAdminAuthState` | `admin-001-worker-{n}.json` |
+
+Tests can use one or both simultaneously:
+
+```ts
+test('admin sees user data', async ({ restfulApiAsUser, restfulApiAsAdmin }) => {
+  // both independently authenticated
+});
+```
 
 ## Conventions
 
