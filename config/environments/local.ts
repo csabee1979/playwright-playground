@@ -1,9 +1,12 @@
 import type { TestConfig } from '../types';
 
 export const localConfig: TestConfig = {
-  name: 'local',
-  baseURL: 'https://playwright.dev',
-  apiBaseURL: 'https://playwright.dev',
+  env: 'local',
+  defaultTimeout: 15_000,
+  playwrightBaseURL: 'https://playwright.dev',
+  leetcodeBaseURL: 'https://leetcode.com',
+  restfulApiBaseURL: 'https://jsonplaceholder.typicode.com',
   jsonPlaceholderBaseURL: 'https://jsonplaceholder.typicode.com',
-  defaultTimeout: 30_000,
+  actionTimeout: 10_000,
+  navigationTimeout: 15_000,
 };

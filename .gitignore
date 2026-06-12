@@ -1,4 +1,6 @@
+# Environment variables
 .env
+.env.secrets
 
 # Playwright
 .history/
@@ -10,3 +12,20 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# VS Code settings
+.vscode/
+
+# Playwright output
+test-results/
+playwright-report/
+playwright/.cache/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+test-logs

@@ -3,7 +3,7 @@
 Practical Playwright + TypeScript project for contributors.
 This repository includes:
 
-- UI tests with page objects and reusable components
+- E2E tests with page objects and reusable components
 - API tests with typed API clients
 - Shared fixtures and test data
 - Environment-based configuration
@@ -39,7 +39,7 @@ Additional run options:
 ```bash
 pnpm run test:ui       # Playwright interactive mode
 pnpm run test:headed   # Run tests with browser visible
-pnpm exec playwright test tests/ui
+pnpm exec playwright test tests/e2e
 pnpm exec playwright test tests/api
 ```
 
@@ -84,7 +84,7 @@ Use these conventions to keep tests consistent and maintainable across teams.
 - Prefer `test.step()` for multi-step scenarios
 - Keep tests independent; do not rely on order
 
-### Example: UI test style
+### Example: E2E test style
 
 ```ts
 import { test } from '@fixtures/test.fixture';
