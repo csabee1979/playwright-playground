@@ -1,0 +1,1 @@
+[playwright-playground] Request [GET] https://jsonplaceholder.typicode.com/posts/1 { status: 200, params: undefined, hasBody: false }
