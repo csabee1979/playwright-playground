@@ -1,6 +1,6 @@
-import { test } from '@fixtures/test.fixture';
 import { UserBuilder } from '@test-data/builders/user.builder';
 import { log } from '@utils/logger';
+import { test } from '@fixtures/e2e/test.fixture';
 
 test.describe('Playwright docs home', () => {
   test('has title', async ({ homePage }) => {
@@ -18,7 +18,7 @@ test.describe('Playwright docs home', () => {
     docsInstallationPage,
     seedUsers,
   }) => {
-    await test.step('Prepare admin context', async () => {
+    await test.step('Prepare admin context', () => {
       const admin = new UserBuilder().withEmail(seedUsers[1].email).asAdmin().build();
 
       log('Prepared admin context', {

@@ -2,7 +2,8 @@ import type { Locator, Page } from '@playwright/test';
 import { BaseComponent } from './base';
 
 export class HeaderComponent extends BaseComponent {
-  constructor(page: Page, root: Locator) {
+  // root is optional, default to header locator. We can pass a custom locator if needed.
+  constructor(page: Page, root: Locator = page.locator('header')) {
     super(page, root);
   }
 

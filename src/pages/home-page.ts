@@ -11,7 +11,7 @@ export class HomePage extends BasePage {
 
   constructor(protected readonly page: Page) {
     super(page);
-    this.header = new HeaderComponent(page, page.locator('header'));
+    this.header = new HeaderComponent(page);
     this.pathCards = new PathCardsComponent(page, page.locator('.pathCard_fFQW'));
   }
 

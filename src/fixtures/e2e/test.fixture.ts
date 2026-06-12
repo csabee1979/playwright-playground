@@ -1,15 +1,12 @@
-import { request as apiRequest, test as base } from '@playwright/test';
-import { getConfig } from '@config/index';
 import { ExampleApiClient } from '@api/clients/example-api.client';
 import { JsonPlaceholderApiClient } from '@api/clients/json-placeholder.client';
-import type { TestConfig } from '@config/index';
 import users from '@test-data/users.json';
 import type { User } from '@test-data/types/user.types';
 import { HomePage } from '@pages/home-page';
 import { DocsInstallationPage } from '@pages/docs-installation.page';
+import { baseFixture } from '../base-fixture';
 
 type TestFixtures = {
-  testConfig: TestConfig;
   homePage: HomePage;
   docsInstallationPage: DocsInstallationPage;
   exampleApi: ExampleApiClient;
@@ -43,11 +40,7 @@ function parseUsers(value: unknown): User[] {
 
 const seedUsers = parseUsers(users);
 
-export const test = base.extend<TestFixtures>({
-  testConfig: async ({}, use) => {
-    await use(getConfig());
-  },
-
+export const test = baseFixture.extend<TestFixtures>({
   homePage: async ({ page }, use) => {
     await use(new HomePage(page));
   },
@@ -57,21 +50,15 @@ export const test = base.extend<TestFixtures>({
   },
 
   exampleApi: async ({ testConfig }, use) => {
-    const request = await apiRequest.newContext({
-      ignoreHTTPSErrors: testConfig.ignoreHTTPSErrors,
-    });
-
-    await use(new ExampleApiClient(request, testConfig));
-    await request.dispose();
+    const exampleApi = await ExampleApiClient.create(testConfig);
+    await use(exampleApi);
+    await exampleApi.dispose();
   },
 
   jsonPlaceholderApi: async ({ testConfig }, use) => {
-    const request = await apiRequest.newContext({
-      ignoreHTTPSErrors: testConfig.ignoreHTTPSErrors,
-    });
-
-    await use(new JsonPlaceholderApiClient(request, testConfig, testConfig.jsonPlaceholderBaseURL));
-    await request.dispose();
+    const jsonPlaceholderApi = await JsonPlaceholderApiClient.create(testConfig);
+    await use(jsonPlaceholderApi);
+    await jsonPlaceholderApi.dispose();
   },
 
   seedUsers: async ({}, use) => {

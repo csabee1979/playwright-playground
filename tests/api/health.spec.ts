@@ -1,4 +1,5 @@
-import { expect, test } from '@fixtures/test.fixture';
+import { expect } from '@playwright/test';
+import { test } from '@fixtures/e2e/test.fixture';
 
 test.describe('API smoke', () => {
   test('health check returns success', async ({ exampleApi }) => {
