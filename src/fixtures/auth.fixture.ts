@@ -43,7 +43,7 @@ async function resolveAuthState(
   const authState = await login(request, testConfig.restfulApi, loginUser);
   await request.dispose();
 
-  await writeAuthState(authFilePath, authState);
+  await writeAuthState<RestfulAuthState>(authFilePath, authState);
   return authState;
 }
 
