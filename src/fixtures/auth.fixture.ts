@@ -9,11 +9,10 @@ import { loginUserRepository } from '@test-data/repositories/login-user.reposito
 import {
   getAuthFilePath,
   isAuthStateValid,
-  login,
   readAuthState,
-  toAuthHeaders,
   writeAuthState,
-} from '@auth/restful-api.auth';
+} from '@auth/auth-state-cache.util';
+import { login, RESTFUL_API_AUTH_PROVIDER, toAuthHeaders } from '@auth/restful-api.auth';
 
 type AuthTestFixtures = {
   restfulApiAsUser: RestfulApiClient;
@@ -30,12 +29,12 @@ async function resolveAuthState(
   testConfig: TestConfig,
   workerIndex: number,
 ): Promise<RestfulAuthState> {
-  const authFilePath = getAuthFilePath(loginUser.id, workerIndex);
-  const cachedState = await readAuthState(authFilePath);
+  const authFilePath = getAuthFilePath(RESTFUL_API_AUTH_PROVIDER, loginUser.id, workerIndex);
+  const cachedState = await readAuthState<RestfulAuthState>(authFilePath);
   if (
     cachedState &&
     cachedState.apiKey === testConfig.restfulApi.apiKey &&
-    isAuthStateValid(cachedState)
+    isAuthStateValid(cachedState, testConfig.restfulApi.tokenExpiryBufferMs)
   ) {
     return cachedState;
   }
@@ -59,27 +58,29 @@ function getLoginUser(idEnvVar: string): LoginUser {
   return loginUser;
 }
 
+async function resolveWorkerAuthState(
+  userIdEnvVar: string,
+  workerIndex: number,
+): Promise<RestfulAuthState> {
+  const testConfig = getConfig();
+  if (!testConfig.restfulApi.apiKey) {
+    throw new Error('Missing RESTFUL_API_KEY.');
+  }
+  const loginUser = getLoginUser(userIdEnvVar);
+  return resolveAuthState(loginUser, testConfig, workerIndex);
+}
+
 export const test = base.extend<AuthTestFixtures, AuthWorkerFixtures>({
   workerUserAuthState: [
     async ({}, use, workerInfo) => {
-      const testConfig = getConfig();
-      if (!testConfig.restfulApi.apiKey) {
-        throw new Error('Missing RESTFUL_API_KEY.');
-      }
-      const loginUser = getLoginUser('RESTFUL_API_USER_ID');
-      await use(await resolveAuthState(loginUser, testConfig, workerInfo.parallelIndex));
+      await use(await resolveWorkerAuthState('RESTFUL_API_USER_ID', workerInfo.parallelIndex));
     },
     { scope: 'worker' },
   ],
 
   workerAdminAuthState: [
     async ({}, use, workerInfo) => {
-      const testConfig = getConfig();
-      if (!testConfig.restfulApi.apiKey) {
-        throw new Error('Missing RESTFUL_API_KEY.');
-      }
-      const loginUser = getLoginUser('RESTFUL_API_ADMIN_ID');
-      await use(await resolveAuthState(loginUser, testConfig, workerInfo.parallelIndex));
+      await use(await resolveWorkerAuthState('RESTFUL_API_ADMIN_ID', workerInfo.parallelIndex));
     },
     { scope: 'worker' },
   ],

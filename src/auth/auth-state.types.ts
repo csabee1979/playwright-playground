@@ -1,7 +1,10 @@
-export type RestfulAuthState = {
+export type CachedAuthState = {
+  expiresAt: string;
+};
+
+export type RestfulAuthState = CachedAuthState & {
   apiKey: string;
   token: string;
   tokenType: string;
-  expiresAt: string;
   email: string;
 };

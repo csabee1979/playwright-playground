@@ -3,6 +3,7 @@ export type EnvironmentName = 'local' | 'dev' | 'staging' | 'production';
 export interface RestfulApiConfig {
   url: string;
   apiKey: string;
+  tokenExpiryBufferMs: number;
 }
 
 export interface TestConfig {
