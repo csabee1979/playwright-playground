@@ -3,8 +3,8 @@ import type { TestConfig } from '@config/index';
 import { BaseApiClient } from '../base-api.client';
 
 export class JsonPlaceholderApiClient extends BaseApiClient {
-  constructor(request: APIRequestContext, testConfig: TestConfig, baseURL: string) {
-    super(request, testConfig, { baseURL });
+  constructor(request: APIRequestContext, testConfig: TestConfig) {
+    super(request, testConfig, { baseURL: testConfig.jsonPlaceholderBaseURL });
   }
 
   /** GET /posts/{id} */

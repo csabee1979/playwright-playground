@@ -42,7 +42,7 @@ const appTest = base.extend<TestFixtures>({
       ignoreHTTPSErrors: testConfig.ignoreHTTPSErrors,
     });
 
-    await use(new JsonPlaceholderApiClient(request, testConfig, testConfig.jsonPlaceholderBaseURL));
+    await use(new JsonPlaceholderApiClient(request, testConfig));
     await request.dispose();
   },
 });
