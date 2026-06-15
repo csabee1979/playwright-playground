@@ -1,3 +1,0 @@
-undefined
-[playwright-playground] Request [GET] https://jsonplaceholder.typicode.com/collections { status: 404, params: { 'auth-type': 'jwt' }, hasBody: false }
-[playwright-playground] Request failed { status: 404, body: {} }
