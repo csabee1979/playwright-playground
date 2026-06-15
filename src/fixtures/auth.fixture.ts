@@ -1,11 +1,10 @@
 import { request as apiRequest, test as base } from '@playwright/test';
-import { getEnv } from '@config/env';
 import { getConfig } from '@config/index';
 import type { TestConfig } from '@config/index';
 import { RestfulApiClient } from '@api/clients/restful-api.client';
 import type { RestfulAuthState } from '@auth/auth-state.types';
 import type { LoginUser } from '@test-data/types/user.types';
-import { loginUserRepository } from '@test-data/repositories/login-user.repository';
+import { loginUsers, type LoginUserKey } from '@test-data/login-users';
 import {
   getAuthFilePath,
   isAuthStateValid,
@@ -47,40 +46,39 @@ async function resolveAuthState(
   return authState;
 }
 
-function getLoginUser(idEnvVar: string): LoginUser {
-  const userId = getEnv(idEnvVar);
-  const loginUser = userId ? loginUserRepository.findById(userId) : undefined;
+function requireLoginUser(key: LoginUserKey): LoginUser {
+  const loginUser = loginUsers[key];
   if (!loginUser) {
     throw new Error(
-      `Missing login user for ${idEnvVar}. Check RESTFUL_API_*_ID/NAME/EMAIL/PASSWORD env vars.`,
+      `Missing login user "${key}". Check RESTFUL_API_*_ID/NAME/EMAIL/PASSWORD env vars.`,
     );
   }
   return loginUser;
 }
 
 async function resolveWorkerAuthState(
-  userIdEnvVar: string,
+  key: LoginUserKey,
   workerIndex: number,
 ): Promise<RestfulAuthState> {
   const testConfig = getConfig();
   if (!testConfig.restfulApi.apiKey) {
     throw new Error('Missing RESTFUL_API_KEY.');
   }
-  const loginUser = getLoginUser(userIdEnvVar);
+  const loginUser = requireLoginUser(key);
   return resolveAuthState(loginUser, testConfig, workerIndex);
 }
 
 export const test = base.extend<AuthTestFixtures, AuthWorkerFixtures>({
   workerUserAuthState: [
     async ({}, use, workerInfo) => {
-      await use(await resolveWorkerAuthState('RESTFUL_API_USER_ID', workerInfo.parallelIndex));
+      await use(await resolveWorkerAuthState('regularUser', workerInfo.parallelIndex));
     },
     { scope: 'worker' },
   ],
 
   workerAdminAuthState: [
     async ({}, use, workerInfo) => {
-      await use(await resolveWorkerAuthState('RESTFUL_API_ADMIN_ID', workerInfo.parallelIndex));
+      await use(await resolveWorkerAuthState('adminUser', workerInfo.parallelIndex));
     },
     { scope: 'worker' },
   ],

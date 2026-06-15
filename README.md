@@ -95,7 +95,7 @@ If credentials are missing, authenticated tests are skipped and the rest of the 
 Two independent repositories handle different concerns:
 
 - `UserRepository` — test data entities loaded from `src/test-data/users.json` (id, name, displayName, role)
-- `LoginUserRepository` — auth credentials loaded purely from env, independent of `users.json`
+- `loginUsers` — auth credentials loaded from env (`loginUsers.regularUser`, `loginUsers.adminUser`), independent of `users.json`
 
 Available fixtures per role:
 
