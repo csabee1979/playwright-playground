@@ -45,7 +45,7 @@ pnpm exec playwright test tests/api
 
 ## Environment setup
 
-Set `TEST_ENV` to `local`, `staging`, or `production` (default: `local`).
+Set `TEST_ENV` to `local`, `dev`, `staging`, or `production` (default: `local`).
 
 1. Copy `.env.example` to `.env`
 2. Override values as needed:
@@ -54,6 +54,7 @@ Set `TEST_ENV` to `local`, `staging`, or `production` (default: `local`).
 TEST_ENV=staging
 BASE_URL=https://your-app.example.com
 API_BASE_URL=https://api.your-app.example.com
+RESTFUL_API_URL=https://api.restful-api.dev
 ```
 
 Notes:
@@ -61,6 +62,53 @@ Notes:
 - `local` defaults to `https://playwright.dev`
 - `staging` and `production` require both `BASE_URL` and `API_BASE_URL`
 - If your corporate proxy causes certificate issues, use `IGNORE_HTTPS_ERRORS=true` locally
+
+### Authenticated restful-api.dev tests
+
+This repo includes an authenticated API fixture for [restful-api.dev](https://restful-api.dev/).
+
+- Authentication is done once per Playwright worker via `POST /login`
+- JWT auth state is cached in `playwright/.auth/worker-<index>.json` and reused across tests
+- Cached auth files are gitignored and recreated automatically when expired
+
+Set these env vars to enable authenticated tests:
+
+```bash
+RESTFUL_API_URL=https://api.restful-api.dev
+RESTFUL_API_KEY=your_api_key
+
+# Regular user
+RESTFUL_API_USER_NAME=your_user_name
+RESTFUL_API_USER_EMAIL=your_user@example.com
+RESTFUL_API_USER_PASSWORD=your_user_password
+
+# Admin user
+RESTFUL_API_ADMIN_NAME=your_admin_name
+RESTFUL_API_ADMIN_EMAIL=your_admin@example.com
+RESTFUL_API_ADMIN_PASSWORD=your_admin_password
+```
+
+If credentials are missing, authenticated tests are skipped and the rest of the suite still runs.
+
+Two independent sources handle different concerns:
+
+- `users` — test data entities loaded from `src/test-data/users.{env}.ts` (id, name, displayName, role); access by named key e.g. `users.demoAdmin`
+- `loginUsers` — auth credentials loaded from env vars (`loginUsers.regularUser`, `loginUsers.adminUser`), independent of the user data files
+
+Available fixtures per role:
+
+| Fixture             | Worker fixture         | Auth file                      |
+| ------------------- | ---------------------- | ------------------------------ |
+| `restfulApiAsUser`  | `workerUserAuthState`  | `regular-user-worker-{n}.json` |
+| `restfulApiAsAdmin` | `workerAdminAuthState` | `admin-user-worker-{n}.json`   |
+
+Tests can use one or both simultaneously:
+
+```ts
+test('admin sees user data', async ({ restfulApiAsUser, restfulApiAsAdmin }) => {
+  // both independently authenticated
+});
+```
 
 ## Conventions
 

@@ -2,7 +2,7 @@ import { getDevConfig } from './environments/dev';
 import { localConfig } from './environments/local';
 import { getProductionConfig } from './environments/production';
 import { getStagingConfig } from './environments/staging';
-import type { EnvironmentName, TestConfig } from './types';
+import type { EnvironmentName, RestfulApiConfig, TestConfig } from './types';
 
 const configFactories: Record<EnvironmentName, () => TestConfig> = {
   local: () => localConfig,
@@ -29,4 +29,4 @@ export function getConfig(): TestConfig {
   return config;
 }
 
-export type { EnvironmentName, TestConfig };
+export type { EnvironmentName, RestfulApiConfig, TestConfig };
