@@ -45,7 +45,7 @@ pnpm exec playwright test tests/api
 
 ## Environment setup
 
-Set `TEST_ENV` to `local`, `staging`, or `production` (default: `local`).
+Set `TEST_ENV` to `local`, `dev`, `staging`, or `production` (default: `local`).
 
 1. Copy `.env.example` to `.env`
 2. Override values as needed:
@@ -92,10 +92,10 @@ RESTFUL_API_ADMIN_PASSWORD=your_admin_password
 
 If credentials are missing, authenticated tests are skipped and the rest of the suite still runs.
 
-Two independent repositories handle different concerns:
+Two independent sources handle different concerns:
 
-- `UserRepository` — test data entities loaded from `src/test-data/users.json` (id, name, displayName, role)
-- `loginUsers` — auth credentials loaded from env (`loginUsers.regularUser`, `loginUsers.adminUser`), independent of `users.json`
+- `users` — test data entities loaded from `src/test-data/users.{env}.ts` (id, name, displayName, role); access by named key e.g. `users.demoAdmin`
+- `loginUsers` — auth credentials loaded from env vars (`loginUsers.regularUser`, `loginUsers.adminUser`), independent of the user data files
 
 Available fixtures per role:
 
