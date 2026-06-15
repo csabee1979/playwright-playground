@@ -1,5 +1,6 @@
 import { test } from '@fixtures/test.fixture';
 import { UserBuilder } from '@test-data/builders/user.builder';
+import { users } from '@test-data/users';
 import { log } from '@utils/logger';
 
 test.describe('Playwright docs home', () => {
@@ -13,13 +14,9 @@ test.describe('Playwright docs home', () => {
     await homePage.pathCards.expectPathCardH3Visible();
   });
 
-  test('get started navigates to installation', async ({
-    homePage,
-    docsInstallationPage,
-    seedUsers,
-  }) => {
+  test('get started navigates to installation', async ({ homePage, docsInstallationPage }) => {
     await test.step('Prepare admin context', () => {
-      const admin = new UserBuilder().withEmail(seedUsers[1].email).asAdmin().build();
+      const admin = new UserBuilder().withEmail(users.demoAdmin.email).asAdmin().build();
 
       log('Prepared admin context', {
         role: admin.role,

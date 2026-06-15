@@ -4,8 +4,6 @@ import { ExampleApiClient } from '@api/clients/example-api.client';
 import { JsonPlaceholderApiClient } from '@api/clients/json-placeholder.client';
 import type { TestConfig } from '@config/index';
 import { test as authTest } from './auth.fixture';
-import { userRepository } from '@test-data/repositories/user.repository';
-import type { User } from '@test-data/types/user.types';
 import { HomePage } from '@pages/home-page';
 import { DocsInstallationPage } from '@pages/docs-installation.page';
 
@@ -15,10 +13,7 @@ type TestFixtures = {
   docsInstallationPage: DocsInstallationPage;
   exampleApi: ExampleApiClient;
   jsonPlaceholderApi: JsonPlaceholderApiClient;
-  seedUsers: User[];
 };
-
-const seedUsers = userRepository.getAll();
 
 const appTest = base.extend<TestFixtures>({
   testConfig: async ({}, use) => {
@@ -49,10 +44,6 @@ const appTest = base.extend<TestFixtures>({
 
     await use(new JsonPlaceholderApiClient(request, testConfig, testConfig.jsonPlaceholderBaseURL));
     await request.dispose();
-  },
-
-  seedUsers: async ({}, use) => {
-    await use(seedUsers);
   },
 });
 
