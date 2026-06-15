@@ -78,13 +78,11 @@ RESTFUL_API_URL=https://api.restful-api.dev
 RESTFUL_API_KEY=your_api_key
 
 # Regular user
-RESTFUL_API_USER_ID=user-001
 RESTFUL_API_USER_NAME=your_user_name
 RESTFUL_API_USER_EMAIL=your_user@example.com
 RESTFUL_API_USER_PASSWORD=your_user_password
 
 # Admin user
-RESTFUL_API_ADMIN_ID=admin-001
 RESTFUL_API_ADMIN_NAME=your_admin_name
 RESTFUL_API_ADMIN_EMAIL=your_admin@example.com
 RESTFUL_API_ADMIN_PASSWORD=your_admin_password
@@ -99,10 +97,10 @@ Two independent sources handle different concerns:
 
 Available fixtures per role:
 
-| Fixture             | Worker fixture         | Auth file                   |
-| ------------------- | ---------------------- | --------------------------- |
-| `restfulApiAsUser`  | `workerUserAuthState`  | `user-001-worker-{n}.json`  |
-| `restfulApiAsAdmin` | `workerAdminAuthState` | `admin-001-worker-{n}.json` |
+| Fixture             | Worker fixture         | Auth file                      |
+| ------------------- | ---------------------- | ------------------------------ |
+| `restfulApiAsUser`  | `workerUserAuthState`  | `regular-user-worker-{n}.json` |
+| `restfulApiAsAdmin` | `workerAdminAuthState` | `admin-user-worker-{n}.json`   |
 
 Tests can use one or both simultaneously:
 

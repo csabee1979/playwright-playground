@@ -23,12 +23,17 @@ type AuthWorkerFixtures = {
   workerAdminAuthState: RestfulAuthState;
 };
 
+function getLoginUserCacheKey(key: LoginUserKey): string {
+  return key.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
 async function resolveAuthState(
+  cacheKey: string,
   loginUser: LoginUser,
   testConfig: TestConfig,
   workerIndex: number,
 ): Promise<RestfulAuthState> {
-  const authFilePath = getAuthFilePath(RESTFUL_API_AUTH_PROVIDER, loginUser.id, workerIndex);
+  const authFilePath = getAuthFilePath(RESTFUL_API_AUTH_PROVIDER, cacheKey, workerIndex);
   const cachedState = await readAuthState<RestfulAuthState>(authFilePath);
   if (
     cachedState &&
@@ -50,7 +55,7 @@ function requireLoginUser(key: LoginUserKey): LoginUser {
   const loginUser = loginUsers[key];
   if (!loginUser) {
     throw new Error(
-      `Missing login user "${key}". Check RESTFUL_API_*_ID/NAME/EMAIL/PASSWORD env vars.`,
+      `Missing login user "${key}". Check RESTFUL_API_*_NAME/EMAIL/PASSWORD env vars.`,
     );
   }
   return loginUser;
@@ -65,7 +70,7 @@ async function resolveWorkerAuthState(
     throw new Error('Missing RESTFUL_API_KEY.');
   }
   const loginUser = requireLoginUser(key);
-  return resolveAuthState(loginUser, testConfig, workerIndex);
+  return resolveAuthState(getLoginUserCacheKey(key), loginUser, testConfig, workerIndex);
 }
 
 export const test = base.extend<AuthTestFixtures, AuthWorkerFixtures>({

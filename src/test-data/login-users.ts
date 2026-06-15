@@ -3,14 +3,12 @@ import type { LoginUser } from '@test-data/types/user.types';
 import { log } from '@utils/logger';
 
 function loginUserFromEnv(prefix: string): LoginUser | undefined {
-  const id = getEnv(`${prefix}_ID`);
   const name = getEnv(`${prefix}_NAME`);
   const email = getEnv(`${prefix}_EMAIL`);
   const password = getEnv(`${prefix}_PASSWORD`);
 
-  if (!id || !name || !email || !password) {
+  if (!name || !email || !password) {
     const missingEnvVars = [
-      !id && `${prefix}_ID`,
       !name && `${prefix}_NAME`,
       !email && `${prefix}_EMAIL`,
       !password && `${prefix}_PASSWORD`,
@@ -20,7 +18,7 @@ function loginUserFromEnv(prefix: string): LoginUser | undefined {
     return undefined;
   }
 
-  return { id, name, email, password };
+  return { name, email, password };
 }
 
 export const loginUsers = {
