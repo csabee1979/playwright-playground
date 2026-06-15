@@ -59,9 +59,11 @@ jobs:
           JSON_PLACEHOLDER_BASE_URL: ${{ vars.JSON_PLACEHOLDER_BASE_URL }}
           RESTFUL_API_URL: ${{ vars.RESTFUL_API_URL }}
           RESTFUL_API_KEY: ${{ secrets.RESTFUL_API_KEY }}
+          RESTFUL_API_USER_NAME: ${{ secrets.RESTFUL_API_USER_NAME }}
           RESTFUL_API_USER_EMAIL: ${{ secrets.RESTFUL_API_USER_EMAIL }}
           RESTFUL_API_USER_PASSWORD: ${{ secrets.RESTFUL_API_USER_PASSWORD }}
           RESTFUL_API_ADMIN_EMAIL: ${{ secrets.RESTFUL_API_ADMIN_EMAIL }}
+          RESTFUL_API_ADMIN_NAME: ${{ secrets.RESTFUL_API_ADMIN_NAME }}
           RESTFUL_API_ADMIN_PASSWORD: ${{ secrets.RESTFUL_API_ADMIN_PASSWORD }}
         run: |
           BROWSER="${{ github.event_name == 'workflow_dispatch' && inputs.browser || 'all' }}"
